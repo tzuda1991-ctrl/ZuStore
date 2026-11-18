@@ -1,0 +1,9 @@
+{
+  "name": "ZUStore",
+  "short_name": "ZUStore",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2fbfc",
+  "theme_color": "#f2fbfc",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

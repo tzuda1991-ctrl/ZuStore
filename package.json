@@ -1,0 +1,8 @@
+{
+  "name": "zustore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ZUStore app discovery and developer marketplace",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" }
+}
