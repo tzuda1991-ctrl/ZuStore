@@ -1,0 +1,25 @@
+plugins {
+    id "com.android.application"
+}
+
+def storeUrl = providers.gradleProperty("storeBaseUrl")
+        .orElse("https://zustore-production.up.railway.app")
+        .get()
+
+android {
+    namespace "com.zustech.zustore"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.zustech.zustore"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+        buildConfigField "String", "STORE_BASE_URL", "\"${storeUrl}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}

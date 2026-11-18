@@ -23,3 +23,15 @@ The APK upload limit is 350 MB; image uploads are limited to 12 MB. Uploads are 
 - `/api/health` — Railway health check
 
 The initial app records are demo catalogue entries. Replace their APKs/screenshots through the admin and developer submission flows before presenting the store as a live download source.
+
+## Android APK (GitHub Actions)
+
+The repository also contains a small Android WebView app that opens the live ZUStore service. Pushes to `main` that change `android/**` or `.github/workflows/android-apk.yml` start an APK build. You can also start it manually from **Actions → Build Android APK → Run workflow**. The debug APK is published as a downloadable workflow artifact named `zustore-android-apk`.
+
+To build locally, install JDK 17, Android SDK platform 35, and Gradle 8.9, then run:
+
+```sh
+gradle --no-daemon :app:assembleDebug
+```
+
+The APK uses `https://zustore-production.up.railway.app` by default. The manual workflow accepts a different store URL if you deploy the backend under another domain.
