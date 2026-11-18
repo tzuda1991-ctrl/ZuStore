@@ -90,11 +90,18 @@ const server = http.createServer(async (req, res) => {
       }
       if (route === '/api/apps' && req.method === 'POST') {
         if (!user) return send(res,401,{error:'Sign in to submit an app.'}); if (!db.settings.allowSubmissions) return send(res,403,{error:'Submissions are temporarily paused.'});
-        const b=await parseBody(req); const app={id:id('app'),name:String(b.name||'New app').slice(0,80),developer:user.name,category:db.categories.includes(b.category)?b.category:'Utility',subcategory:String(b.subcategory||'New app'),description:String(b.description||'').slice(0,1500),version:String(b.version||'1.0.0'),size:String(b.size||'—'),rating:0,ratingCount:0,downloads:0,status:'pending',icon:String(b.icon||'✦').slice(0,4),color:b.color||'blue',badge:'IN REVIEW',updated:'Just now',featured:false,screenshots:Array.isArray(b.screenshots)?b.screenshots:[],apkUrl:String(b.apkUrl||''),apkName:String(b.apkName||'')}; db.apps.unshift(app); save(); return send(res,201,{app});
+        const b=await parseBody(req); const app={id:id('app'),name:String(b.name||'New app').slice(0,80),developer:user.name,category:db.categories.includes(b.category)?b.category:'Utility',subcategory:String(b.subcategory||'New app'),description:String(b.description||'').slice(0,1500),version:String(b.version||'1.0.0'),size:String(b.size||'—'),rating:0,ratingCount:0,downloads:0,status:'pending',icon:String(b.icon||'✦').slice(0,4),iconUrl:String(b.iconUrl||''),color:b.color||'blue',badge:'IN REVIEW',updated:'Just now',featured:false,screenshots:Array.isArray(b.screenshots)?b.screenshots:[],apkUrl:String(b.apkUrl||''),apkName:String(b.apkName||'')}; db.apps.unshift(app); save(); return send(res,201,{app});
       }
       if (route.startsWith('/api/apps/') && req.method === 'POST' && route.endsWith('/download')) {
-        if (!user) return send(res,401,{error:'Sign in to add this app to your library.'}); const app=db.apps.find(a=>a.id===route.split('/')[3]&&a.status==='published'); if(!app)return send(res,404,{error:'App not found.'});
-        const list=db.library[user.id] ||= []; if(!list.includes(app.id)){list.unshift(app.id);app.downloads++;save();} return send(res,200,{ok:true,library:list});
+        const app=db.apps.find(a=>a.id===route.split('/')[3]&&a.status==='published'); if(!app)return send(res,404,{error:'App not found.'});
+        if(!app.apkUrl)return send(res,404,{error:'APK has not been uploaded for this listing yet.'});
+        app.downloads=Number(app.downloads||0)+1;let list=null;
+        if(user){list=db.library[user.id] ||= [];if(!list.includes(app.id))list.unshift(app.id);}
+        save();return send(res,200,{ok:true,library:list,apkUrl:app.apkUrl,apkName:app.apkName});
+      }
+      if (route.startsWith('/api/apps/') && req.method === 'POST' && route.endsWith('/library')) {
+        if(!user)return send(res,401,{error:'Sign in to save this app to your library.'});const app=db.apps.find(a=>a.id===route.split('/')[3]&&a.status==='published');if(!app)return send(res,404,{error:'App not found.'});
+        const list=db.library[user.id] ||= [];if(!list.includes(app.id))list.unshift(app.id);save();return send(res,200,{ok:true,library:list});
       }
       if (route.startsWith('/api/library/') && req.method === 'DELETE') { if(!user)return send(res,401,{error:'Sign in to manage your library.'});const appId=route.split('/')[3];db.library[user.id]=(db.library[user.id]||[]).filter(id=>id!==appId);save();return send(res,200,{library:db.library[user.id]}); }
       if (route.startsWith('/api/apps/') && req.method === 'POST' && route.endsWith('/reviews')) {
@@ -102,6 +109,11 @@ const server = http.createServer(async (req, res) => {
         const rating=Math.min(5,Math.max(1,Number(b.rating)||5)); db.reviews.unshift({id:id('r'),appId:app.id,user:user.name,rating,text:String(b.text||'').slice(0,500),date:new Date().toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'})}); const revs=db.reviews.filter(r=>r.appId===app.id); app.rating=Number((revs.reduce((n,r)=>n+r.rating,0)/revs.length).toFixed(1)); app.ratingCount=revs.length;save();return send(res,201,{ok:true});
       }
       if (route === '/api/messages' && req.method === 'POST') { if(!user)return send(res,401,{error:'Sign in to send a message.'}); const b=await parseBody(req); const m={id:id('m'),from:user.name,to:'all',text:String(b.text||'').slice(0,500),date:new Date().toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'}),kind:'community'}; if(!m.text)return send(res,400,{error:'Write a message first.'}); db.messages.push(m);save();return send(res,201,{message:m}); }
+      if (route === '/api/admin/apps' && req.method === 'POST') {
+        const b=await parseBody(req);const name=String(b.name||'').trim();if(!name||!b.apkUrl||!b.iconUrl)return send(res,400,{error:'App name, APK and icon are required.'});
+        const status=b.status==='pending'?'pending':'published';const app={id:id('app'),name:name.slice(0,80),developer:'ZUStore',category:db.categories.includes(b.category)?b.category:'Utility',subcategory:String(b.subcategory||b.category||'App'),description:String(b.description||'').slice(0,1500),version:String(b.version||'1.0.0'),size:String(b.size||'—'),rating:0,ratingCount:0,downloads:0,status,icon:'✦',iconUrl:String(b.iconUrl),color:'blue',badge:status==='published'?'NEW':'IN REVIEW',updated:'Just now',featured:false,screenshots:Array.isArray(b.screenshots)?b.screenshots:[],apkUrl:String(b.apkUrl),apkName:String(b.apkName||'')};
+        db.apps.unshift(app);save();return send(res,201,{app});
+      }
       if (route === '/api/admin/apps' && req.method === 'PATCH') { const b=await parseBody(req);const app=db.apps.find(a=>a.id===b.id);if(!app)return send(res,404,{error:'App not found.'});if(b.status)app.status=b.status;if(typeof b.featured==='boolean')app.featured=b.featured;if(b.name)app.name=String(b.name).slice(0,80);if(b.category&&db.categories.includes(b.category))app.category=b.category;if(b.description)app.description=String(b.description).slice(0,1500);save();return send(res,200,{app}); }
       if (route === '/api/admin/apps' && req.method === 'DELETE') { const b=await parseBody(req);db.apps=db.apps.filter(a=>a.id!==b.id);save();return send(res,200,{ok:true}); }
       if (route === '/api/admin/users' && req.method === 'PATCH') { const b=await parseBody(req);const target=db.users.find(u=>u.id===b.id);if(!target)return send(res,404,{error:'User not found.'});if(target.id===user.id&&b.status==='blocked')return send(res,400,{error:'You cannot block your own admin account.'});if(b.status)target.status=b.status;if(b.role&&['user','developer','admin'].includes(b.role))target.role=b.role;save();return send(res,200,{user:safeUser(target)}); }
