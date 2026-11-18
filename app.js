@@ -17,7 +17,7 @@ const iconPaths = {
   Graphics:'M4 4h16v16H4z M8 16l3.2-4 2.4 2.5 2-2L20 17 M8.5 8.5h.1',
   Tools:'M14.5 6a5 5 0 0 0-6.2 6.2L3.5 17l3.5 3.5 4.8-4.8A5 5 0 0 0 18 9.5l-3.2 3.2-3.5-3.5z'
 };
-const icons = Object.fromEntries(Object.keys(iconPaths).map(key=>[key,`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[key]}"/></svg>`]));
+const icons = Object.fromEntries(Object.keys(iconPaths).map(key=>[key,`<svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true" style="display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="${iconPaths[key]}"/></svg>`]));
 const safe = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const api = async (url, options={}) => { const headers={...(options.headers||{})}; if(state.token)headers.Authorization=`Bearer ${state.token}`; if(options.body && !(options.body instanceof Blob))headers['Content-Type']='application/json'; const response=await fetch(url,{...options,headers}); const body=await response.json().catch(()=>({})); if(!response.ok)throw new Error(body.error||'Something went wrong.');return body; };
 async function refresh(){const d=await api('/api/bootstrap');state.user=d.user;if(!d.user&&state.token){state.token='';localStorage.removeItem('zustore-token')}state.settings=d.settings;state.categories=d.categories;state.apps=d.apps;state.library=d.library;state.reviews=d.reviews;state.messages=d.messages;$('#avatarText').textContent=state.user?.name?.[0]?.toUpperCase()||'Z';}
