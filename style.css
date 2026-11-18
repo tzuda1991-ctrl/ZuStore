@@ -60,3 +60,6 @@ body{background:linear-gradient(180deg,#e9f8f8 0,#f1f0fc 44%,#f9faff 100%)}
 .upload-guide b{font-size:11px}.upload-guide p{margin:4px 0 0;color:#728297;font-size:9px;line-height:1.55}
 .admin-eyebrow{display:block;margin:3px 0 6px;font-size:8px;color:#148f94}
 @media(max-width:560px){.detail-actions .download-cta{flex:1.35;justify-content:flex-start;padding:9px}.detail-actions .save-cta{flex:1;font-size:9px}.detail-actions .share-cta{width:36px}.bottom-nav button{min-width:55px}.hero-appicon svg{width:49px;height:49px}.upload-guide{padding:12px}.upload-guide p{font-size:9px}}
+
+/* Keep inline SVG navigation artwork visible in Android WebView and mobile browsers. */
+.top-actions .icon-btn > svg,.search-icon > svg,.bottom-nav button > span > svg{display:block!important;visibility:visible!important;opacity:1!important;width:21px!important;height:21px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}.bottom-nav button > span{display:grid!important;place-items:center!important;min-height:22px}
